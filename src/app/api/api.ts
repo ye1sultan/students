@@ -1,5 +1,5 @@
 export const login = async (username: string, password: string) => {
-  const response = await fetch("http://192.168.0.102:8000/auth/login/", {
+  const response = await fetch("http://localhost:8000/auth/login/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -20,7 +20,7 @@ export const getUser = async () => {
     throw new Error("No access token found");
   }
 
-  const response = await fetch("http://192.168.0.102:8000/auth/user/", {
+  const response = await fetch("http://localhost:8000/auth/user/", {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -42,7 +42,7 @@ export const getSubjects = async () => {
   }
 
   const response = await fetch(
-    "http://192.168.0.102:8000/studyplan/available-subjects/",
+    "http://localhost:8000/studyplan/available-subjects/",
     {
       method: "GET",
       headers: {
@@ -66,7 +66,7 @@ export const getSchedule = async () => {
   }
 
   const response = await fetch(
-    "http://192.168.0.102:8000/studyplan/class-schedules/",
+    "http://localhost:8000/studyplan/class-schedules/",
     {
       method: "GET",
       headers: {
@@ -90,7 +90,7 @@ export const deleteSubjectFromSchedule = async (id: number) => {
   }
 
   const response = await fetch(
-     `http://192.168.0.102:8000/studyplan/class-schedules/${id}/`,
+     `http://localhost:8000/studyplan/class-schedules/${id}/`,
     {
       method: "DELETE",
       headers: {
@@ -120,7 +120,7 @@ export const scheduleClass = async (
   }
 
   const response = await fetch(
-    "http://192.168.0.102:8000/studyplan/class-schedules/",
+    "http://localhost:8000/studyplan/class-schedules/",
     {
       method: "POST",
       headers: {
