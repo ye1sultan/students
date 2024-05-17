@@ -83,8 +83,31 @@ export const getSchedule = async () => {
   return response.json();
 };
 
+export const deleteSubjectFromSchedule = async (id: number) => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("No access token found");
+  }
+
+  const response = await fetch(
+    `http://192.168.0.102:8000/studyplan/class-schedules/${id}/`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to delete subject from schedule");
+  }
+
+  return response.json();
+};
+
 export const scheduleClass = async (
-  user_profile_id: number,
   semester_id: number,
   subject_semester_id: number,
   day_of_week: string,
@@ -105,12 +128,15 @@ export const scheduleClass = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        user_profile_id,
-        semester_id,
-        subject_semester_id,
-        day_of_week,
-        start_time,
-        end_time,
+        schedules: [
+          {
+            semester_id,
+            subject_semester_id,
+            day_of_week,
+            start_time,
+            end_time,
+          },
+        ],
       }),
     }
   );

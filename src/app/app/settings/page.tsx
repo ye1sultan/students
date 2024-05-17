@@ -93,9 +93,9 @@ export default function Settings() {
             </div>
           </div>
           <div className="flex flex-col justify-center items-center w-full gap-4">
-            <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[#41787e] transition w-[50%]">
+            {/* <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[#41787e] transition w-[50%]">
               Құпия сөзді өзгерту
-            </button>
+            </button> */}
             <button
               onClick={handleExit}
               className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-700 transition w-[50%]"

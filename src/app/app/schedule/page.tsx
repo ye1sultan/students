@@ -53,7 +53,7 @@ export default function Schedule() {
           }
         });
 
-        console.log(fetchedSchedule);
+        // console.log(fetchedSchedule);
         setSchedule(processedSchedule);
       } catch (error) {
         console.error("Failed to fetch schedule:", error);
@@ -74,19 +74,19 @@ export default function Schedule() {
                 Time
               </th>
               <th className="w-1/5 p-2 font-bold border border-grey-500 text-left">
-                Monday
+                Дүйсембі
               </th>
               <th className="w-1/5 p-2 font-bold border border-grey-500 text-left">
-                Tuesday
+                Сейсенбі
               </th>
               <th className="w-1/5 p-2 font-bold border border-grey-500 text-left">
-                Wednesday
+                Сәрсенбі
               </th>
               <th className="w-1/5 p-2 font-bold border border-grey-500 text-left">
-                Thursday
+                Бейсенбі
               </th>
               <th className="w-1/5 p-2 font-bold border border-grey-500 text-left">
-                Friday
+                Жұма
               </th>
             </tr>
           </thead>

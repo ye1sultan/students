@@ -1,7 +1,13 @@
 "use client";
 
-import { getSubjects } from "@/app/api/api";
+import {
+  deleteSubjectFromSchedule,
+  getSchedule,
+  getSubjects,
+  scheduleClass,
+} from "@/app/api/api";
 import { Course } from "@/app/types/ICourse";
+import { FetchedSlot } from "@/app/types/ISchedule";
 import { Toaster } from "@/components/ui/toaster";
 import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
@@ -18,21 +24,38 @@ export default function Plan() {
   }
 
   const [subjects, setSubjects] = useState<Course[]>([]);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [selectedSubjects, setSelectedSubjects] = useState<Course[]>([]);
+  const [totalCredits, setTotalCredits] = useState(0);
 
   useEffect(() => {
-    const fetchSubjects = async () => {
+    const fetchSubjectsAndSchedule = async () => {
       try {
-        const subjects = await getSubjects();
-        setSubjects(subjects);
+        const fetchedSubjects = await getSubjects();
+        const fetchedSchedule: FetchedSlot[] = await getSchedule();
+        console.log(fetchedSchedule);
 
-        console.log(subjects);
+        const selectedSubjectsFromSchedule = fetchedSubjects.filter(
+          (subject: any) =>
+            fetchedSchedule.some(
+              (slot) =>
+                slot.subject_semester__subject__title === subject.subject__title
+            )
+        );
+
+        setSubjects(fetchedSubjects);
+        setSelectedSubjects(selectedSubjectsFromSchedule);
+        setTotalCredits(
+          selectedSubjectsFromSchedule.reduce(
+            (total: any, subject: any) => total + subject.subject__credits,
+            0
+          )
+        );
       } catch (error) {
-        console.error("Failed to fetch subjects:", error);
+        console.error("Failed to fetch subjects or schedule:", error);
       }
     };
 
-    fetchSubjects();
+    fetchSubjectsAndSchedule();
   }, []);
 
   const groupedSubjects = subjects.reduce((acc, subject) => {
@@ -44,28 +67,52 @@ export default function Plan() {
     return acc;
   }, {} as Record<string, typeof subjects>);
 
-  const [selectedSubjects, setSelectedSubjects] = useState<typeof subjects>([]);
-  const [totalCredits, setTotalCredits] = useState(0);
-
-  const handleSubjectSelect = (
-    subject: (typeof subjects)[0],
-    isSelected: boolean
-  ) => {
-    if (isSelected) {
-      if (totalCredits + subject.subject__credits <= maxCredits) {
-        setSelectedSubjects((prev) => [...prev, subject]);
-        setTotalCredits((prev) => prev + subject.subject__credits);
+  const handleSubjectSelect = async (subject: Course, isSelected: boolean) => {
+    try {
+      if (isSelected) {
+        if (totalCredits + subject.subject__credits <= maxCredits) {
+          const newSelectedSubjects = [...selectedSubjects, subject];
+          setSelectedSubjects(newSelectedSubjects);
+          setTotalCredits((prev) => prev + subject.subject__credits);
+          await scheduleClass(
+            4,
+            subject.id,
+            subject.day_of_week,
+            subject.start_time,
+            subject.end_time
+          );
+        } else {
+          toast({
+            title: "Кредит cаны",
+            description: "Кредиттердің максималды саны асып кетті",
+            variant: "destructive",
+          });
+        }
       } else {
-        toast({
-          title: "Кредит cаны",
-          description: "Кредиттердің максималды саны асып кетті",
-          variant: "destructive",
-        });
+        const newSelectedSubjects = selectedSubjects.filter(
+          (s) => s.id !== subject.id
+        );
+        setSelectedSubjects(newSelectedSubjects);
+        setTotalCredits((prev) => prev - subject.subject__credits);
+        await deleteSubjectFromSchedule(subject.id);
       }
-    } else {
-      setSelectedSubjects((prev) => prev.filter((s) => s.id !== subject.id));
-      setTotalCredits((prev) => prev - subject.subject__credits);
+
+      const updatedSchedule: FetchedSlot[] = await getSchedule();
+      console.log("Updated Schedule:", updatedSchedule);
+    } catch (error) {
+      console.error("Failed to update schedule:", error);
     }
+  };
+
+  const printSchedule = (selectedSubjects: Course[]) => {
+    const schedule = selectedSubjects.map((subject) => ({
+      day_of_week: subject.day_of_week,
+      start_time: subject.start_time,
+      end_time: subject.end_time,
+      subject_title: subject.subject__title,
+      university_name: subject.subject__university__name,
+    }));
+    console.log("Updated Schedule:", schedule);
   };
 
   return (
@@ -94,18 +141,13 @@ export default function Plan() {
                 <div className="grid grid-cols-1 gap-4">
                   {subjects.map((subject) => {
                     const isSelected = selectedSubjects.some(
-                      (s) => s.subject__title === subject.subject__title
+                      (s) => s.id === subject.id
                     );
                     return (
                       <div
                         key={subject.id}
                         className={`p-4 border rounded flex justify-between ${
-                          isSelected &&
-                          !selectedSubjects.find((s) => s.id === subject.id)
-                            ? "bg-gray-300"
-                            : isSelected
-                            ? "bg-blue-100"
-                            : "bg-white"
+                          isSelected ? "bg-blue-100" : "bg-white"
                         }`}
                       >
                         <div>
@@ -125,32 +167,15 @@ export default function Plan() {
                           </p>
                           <button
                             className={`mt-2 px-4 py-2 rounded ${
-                              isSelected &&
-                              !selectedSubjects.find((s) => s.id === subject.id)
-                                ? "bg-gray-400 cursor-not-allowed"
-                                : isSelected
+                              isSelected
                                 ? "bg-red-500 hover:bg-red-700"
                                 : "bg-primary hover:bg-[#41787e]"
-                            } text-white ${
-                              isSelected &&
-                              !selectedSubjects.find((s) => s.id === subject.id)
-                                ? "cursor-not-allowed"
-                                : ""
-                            }`}
+                            } text-white`}
                             onClick={() =>
                               handleSubjectSelect(subject, !isSelected)
                             }
-                            disabled={
-                              isSelected &&
-                              !selectedSubjects.find((s) => s.id === subject.id)
-                            }
                           >
-                            {isSelected &&
-                            !selectedSubjects.find((s) => s.id === subject.id)
-                              ? "Қол жетімсіз"
-                              : isSelected
-                              ? "Алып тастау"
-                              : "Қосу"}
+                            {isSelected ? "Алып тастау" : "Қосу"}
                           </button>
                         </div>
                       </div>

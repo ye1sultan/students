@@ -1,6 +1,11 @@
 "use client";
 
-import { getSchedule, getSubjects, scheduleClass } from "@/app/api/api";
+import {
+  deleteSubjectFromSchedule,
+  getSchedule,
+  getSubjects,
+  scheduleClass,
+} from "@/app/api/api";
 import { Course } from "@/app/types/ICourse";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -16,6 +21,8 @@ export default function Mobility() {
   const [subjects, setSubjects] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+  const [schedule, setSchedule] = useState([]);
+  const [otherUniSubject, setOtherUniSubject] = useState<Course | null>(null);
 
   const [filters, setFilters] = useState({
     university_name: "",
@@ -27,10 +34,8 @@ export default function Mobility() {
   const [showUniversityHints, setShowUniversityHints] = useState(false);
   const [showFacultyHints, setShowFacultyHints] = useState(false);
 
-  const [schedule, setSchedule] = useState([]);
-
   useEffect(() => {
-    const fetchSubjects = async () => {
+    const fetchSubjectsAndSchedule = async () => {
       try {
         const subjects = await getSubjects();
         setSubjects(subjects);
@@ -38,13 +43,21 @@ export default function Mobility() {
         const schedule = await getSchedule();
         setSchedule(schedule);
 
+        const otherUniSubject = schedule.find(
+          (s) =>
+            s.subject_semester__subject__university__name !==
+            localStorage.getItem("university")
+        );
+
+        setOtherUniSubject(otherUniSubject);
+
         console.log(schedule);
       } catch (error) {
         console.error("Failed to fetch subjects:", error);
       }
     };
 
-    fetchSubjects();
+    fetchSubjectsAndSchedule();
   }, []);
 
   const handleFilterChange = (
@@ -78,22 +91,38 @@ export default function Mobility() {
   const handleAddCourse = async () => {
     if (selectedCourse) {
       try {
-        const user_profile_id = 2;
         const semester_id = 4;
+        if (otherUniSubject) {
+          await deleteSubjectFromSchedule(otherUniSubject.id);
+          setOtherUniSubject(null);
+        }
+
         const response = await scheduleClass(
-          user_profile_id,
           semester_id,
           selectedCourse.id,
           selectedCourse.day_of_week,
           selectedCourse.start_time,
           selectedCourse.end_time
         );
+
+        const updatedSchedule = await getSchedule();
+        setSchedule(updatedSchedule);
+
+        const newOtherUniSubject = updatedSchedule.find(
+          (s) =>
+            s.subject_semester__subject__university__name !==
+            localStorage.getItem("university")
+        );
+
+        setOtherUniSubject(newOtherUniSubject);
+
         console.log("Scheduled course:", response);
       } catch (error) {
         console.error("Failed to schedule course:", error);
       }
     }
   };
+
   const getHints = (input: string, field: keyof Course) => {
     const hints = Array.from(
       new Set(
