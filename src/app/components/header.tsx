@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bell, QuestionMark } from "../assets/icons/Icons";
+import { Bell, Logo, QuestionMark } from "../assets/icons/Icons";
 
 export const Header = () => {
   const router = useRouter();
@@ -27,7 +27,7 @@ export const Header = () => {
   return (
     <div className="w-full h-20 bg-neutral-100 text-neutral-950 border-b-2 border-neutral-300">
       <div className="w-full h-full flex justify-between items-center px-12">
-        <h1>Logo</h1>
+        <Logo className="w-16 h-16 text-primary"/>
         <div className="flex justify-center items-center gap-x-4">
           <a href="mailto:student@help.desk">
             <QuestionMark className="text-neutral-500 hover:text-primary" />

@@ -4,6 +4,9 @@
 import { getUser } from "@/app/api/api";
 import {
   Dollar,
+  Message,
+  Mobility,
+  Plan,
   Schedule,
   Smile,
   User as UserIcon,
@@ -115,15 +118,15 @@ export default function Home() {
           <p className="text-lg">Академиялык Күнтізбеге Өту</p>
         </CardButton>
         <CardButton onClick={() => router.push("/app/plan")}>
-          <Schedule className="w-16 h-16" />
+          <Plan className="w-16 h-16" />
           <p className="text-lg">Жеке оқу жоспары</p>
         </CardButton>
         <CardButton onClick={() => router.push("/app/mobility")}>
-          <Schedule className="w-16 h-16" />
+          <Mobility className="w-16 h-16" />
           <p className="text-lg">Академиялық ұтқырлық</p>
         </CardButton>
         <CardButton onClick={() => router.push("/app/notifications")}>
-          <Schedule className="w-16 h-16" />
+          <Message className="w-16 h-16" />
           <p className="text-lg">Ақпараттық көмек</p>
         </CardButton>
       </div>

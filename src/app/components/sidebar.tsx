@@ -2,7 +2,14 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Schedule } from "../assets/icons/Icons";
+import {
+  Dashboard,
+  Message,
+  Mobility,
+  Plan,
+  Schedule,
+  Settings,
+} from "../assets/icons/Icons";
 import { SidebarButton } from "./sidebar-button";
 
 export const Sidebar = () => {
@@ -15,12 +22,12 @@ export const Sidebar = () => {
   }, [pathname]);
 
   const buttons = [
-    { path: "/app/home", text: "Басты Бет" },
-    { path: "/app/plan", text: "Оқу Жоспары" },
-    { path: "/app/schedule", text: "Күнтізбе" },
-    { path: "/app/mobility", text: "Академиялық Ұтқырлық" },
-    { path: "/app/notifications", text: "Хабарламалар" },
-    { path: "/app/settings", text: "Баптаулар" },
+    { path: "/app/home", icon: <Dashboard />, text: "Басты Бет" },
+    { path: "/app/plan", icon: <Plan />, text: "Оқу Жоспары" },
+    { path: "/app/schedule", icon: <Schedule />, text: "Күнтізбе" },
+    { path: "/app/mobility", icon: <Mobility />, text: "Академиялық Ұтқырлық" },
+    { path: "/app/notifications", icon: <Message />, text: "Хабарламалар" },
+    { path: "/app/settings", icon: <Settings />, text: "Баптаулар" },
   ];
 
   return (
@@ -29,13 +36,7 @@ export const Sidebar = () => {
         {buttons.map((button) => (
           <SidebarButton
             key={button.path}
-            icon={
-              <Schedule
-                className={`stroke-current ${
-                  activePath === button.path ? "text-primary" : "text-gray-600"
-                }`}
-              />
-            }
+            icon={button.icon}
             text={button.text}
             className={
               activePath === button.path ? "text-primary" : "text-neutral-950"

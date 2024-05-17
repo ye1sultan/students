@@ -44,7 +44,7 @@ export default function Mobility() {
         setSchedule(schedule);
 
         const otherUniSubject = schedule.find(
-          (s) =>
+          (s: any) =>
             s.subject_semester__subject__university__name !==
             localStorage.getItem("university")
         );
@@ -92,10 +92,10 @@ export default function Mobility() {
     if (selectedCourse) {
       try {
         const semester_id = 4;
-        if (otherUniSubject) {
-          await deleteSubjectFromSchedule(otherUniSubject.id);
-          setOtherUniSubject(null);
-        }
+        // if (otherUniSubject) {
+        //   await deleteSubjectFromSchedule(otherUniSubject.id);
+        //   setOtherUniSubject(null);
+        // }
 
         const response = await scheduleClass(
           semester_id,
