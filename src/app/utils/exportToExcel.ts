@@ -1,7 +1,5 @@
 import { Course } from "@/app/types/ICourse";
 import * as XLSX from "xlsx";
-import useFetchData from "../hooks/useFetchData";
-import { User } from "../types/IUser";
 import { getUser } from "../api/api";
 
 export const exportToExcel = async (selectedSubjects: Course[]) => {

@@ -7,6 +7,7 @@ export interface FetchedSlot {
   subject_semester__subject__title: string;
   subject_semester__subject__description: string;
   subject_semester__subject__credits: number;
+  subject_semester__subject__university__name: string;
 }
 
 export interface ScheduleSlot {

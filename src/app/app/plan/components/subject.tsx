@@ -1,6 +1,17 @@
 import { Course } from "@/app/types/ICourse";
 
-const maxCredits = 120;
+const translateDayToKazakh = (day: string): string => {
+  const daysInKazakh: { [key: string]: string } = {
+    Monday: "Дүйсенбі",
+    Tuesday: "Сейсенбі",
+    Wednesday: "Сәрсенбі",
+    Thursday: "Бейсенбі",
+    Friday: "Жұма",
+    Saturday: "Сенбі",
+    Sunday: "Жексенбі",
+  };
+  return daysInKazakh[day] || day;
+};
 
 export const Subject = ({
   subject,
@@ -21,7 +32,7 @@ export const Subject = ({
         <div className="flex justify-start items-center gap-x-4">
           <h3 className="text-lg font-semibold">{subject.subject__title}</h3>
           <span className="text-neutral-500 text-sm">
-            {subject.day_of_week} - {subject.start_time}
+            {translateDayToKazakh(subject.day_of_week)} - {subject.start_time}
           </span>
         </div>
         <p className="text-neutral-500 text-sm">

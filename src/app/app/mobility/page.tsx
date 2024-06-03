@@ -8,15 +8,15 @@ import {
 } from "@/app/api/api";
 import { numberOfCoursesAtom } from "@/app/atoms/numberOfCourses";
 import useAuth from "@/app/hooks/useAuth";
-import { FetchedSlot, ScheduleSlot } from "@/app/types/ISchedule";
+import { FetchedSlot } from "@/app/types/ISchedule";
 import { SimilarSubject } from "@/app/types/ISimilarSubject";
 import { getNumberOfCredits } from "@/app/utils/getNumberOfCredits";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toaster } from "@/components/ui/toaster";
 import { toast } from "@/components/ui/use-toast";
 import { useAtom } from "jotai";
 import { useState } from "react";
 import { PageTitle } from "../../components/page-title";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Mobility() {
   useAuth();
@@ -88,29 +88,29 @@ export default function Mobility() {
   };
 
   const handleSelectCourse = async (course: SimilarSubject) => {
-    // const fetchedSchedule: FetchedSlot[] = await getSchedule();
-    // const isTuranCourseInSchedule = fetchedSchedule.some(
-    //   (slot) => slot.university_name === "Turan"
-    // );
+    const fetchedSchedule: FetchedSlot[] = await getSchedule();
+    console.log(fetchedSchedule);
+    const isTuranCourseInSchedule = fetchedSchedule.some(
+      (slot) => slot.subject_semester__subject__university__name === "Turan"
+    );
 
     if (activeTab === "subject") {
       if (course.isSelected) {
         handleRemoveCourse(course);
       } else {
-        // if (isTuranCourseInSchedule) {
-        //   toast({
-        //     title: "Қате",
-        //     description:
-        //       "Университет саны шектеулі",
-        //     variant: "destructive",
-        //   });
-        //   return;
-        // }
+        if (isTuranCourseInSchedule) {
+          toast({
+            title: "Қате",
+            description: "Университет саны шектеулі",
+            variant: "destructive",
+          });
+          return;
+        }
 
-        // const existingCourse = filteredCourses.find((c) => c.isSelected);
-        // if (existingCourse) {
-        //   await handleRemoveCourse(existingCourse);
-        // }
+        const existingCourse = filteredCourses.find((c) => c.isSelected);
+        if (existingCourse) {
+          await handleRemoveCourse(existingCourse);
+        }
         handleAddCourse(course);
       }
     } else {
