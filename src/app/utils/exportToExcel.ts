@@ -1,7 +1,15 @@
 import { Course } from "@/app/types/ICourse";
 import * as XLSX from "xlsx";
+import useFetchData from "../hooks/useFetchData";
+import { User } from "../types/IUser";
+import { getUser } from "../api/api";
 
-export const exportToExcel = (selectedSubjects: Course[]) => {
+export const exportToExcel = async (selectedSubjects: Course[]) => {
+  const user = await getUser();
+
+  const userInfo = [user?.first_name, user?.last_name];
+  const semesterInfo = ["Күз", 2024];
+
   const headers = [
     "Subject ID",
     "Title",
@@ -13,7 +21,8 @@ export const exportToExcel = (selectedSubjects: Course[]) => {
     "University",
     "Faculty",
   ];
-  const data = selectedSubjects.map((subject) => [
+
+  const tableRow = selectedSubjects.map((subject) => [
     subject.subject__id,
     subject.subject__title,
     subject.subject__description,
@@ -25,7 +34,9 @@ export const exportToExcel = (selectedSubjects: Course[]) => {
     subject.subject__faculty__name,
   ]);
 
-  const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+  const worksheetData = [userInfo, semesterInfo, headers, ...tableRow];
+
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Study Plan");
 

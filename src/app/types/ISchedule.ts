@@ -11,9 +11,5 @@ export interface FetchedSlot {
 
 export interface ScheduleSlot {
   time: string;
-  Monday?: { name: string; description: string };
-  Tuesday?: { name: string; description: string };
-  Wednesday?: { name: string; description: string };
-  Thursday?: { name: string; description: string };
-  Friday?: { name: string; description: string };
+  [key: string]: { name: string; description: string } | string;
 }

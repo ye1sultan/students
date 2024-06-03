@@ -46,7 +46,8 @@ export default function Schedule() {
             (t) => t.time === slot.start_time
           );
           if (timeIndex !== -1) {
-            processedSchedule[timeIndex][slot.day_of_week] = {
+            const dayOfWeek = slot.day_of_week; // Keeping dayOfWeek as string
+            processedSchedule[timeIndex][dayOfWeek] = {
               name: slot.subject_semester__subject__title,
               description: slot.subject_semester__subject__description,
             };
@@ -61,6 +62,24 @@ export default function Schedule() {
 
     fetchSchedule();
   }, [router]);
+
+  const renderSlotContent = (
+    slot: string | { name: string; description: string }
+  ) => {
+    if (typeof slot === "object") {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>{slot.name}</TooltipTrigger>
+            <TooltipContent side="right">
+              <p>{slot.description}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+    return null;
+  };
 
   return (
     <main className="flex w-full min-h-screen flex-col items-start justify-start gap-12 px-12 py-6 text-neutral-950">
@@ -99,54 +118,19 @@ export default function Schedule() {
                   {slot.time}
                 </td>
                 <td className="w-1/5 p-2 border border-grey-500 text-center">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>{slot?.Monday?.name}</TooltipTrigger>
-                      <TooltipContent side="right">
-                        <p>{slot?.Monday?.description}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  {renderSlotContent(slot?.Monday)}
                 </td>
                 <td className="w-1/5 p-2 border border-grey-500 text-center">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>{slot?.Tuesday?.name}</TooltipTrigger>
-                      <TooltipContent side="right">
-                        <p>{slot?.Tuesday?.description}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  {renderSlotContent(slot?.Tuesday)}
                 </td>
                 <td className="w-1/5 p-2 border border-grey-500 text-center">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>{slot?.Wednesday?.name}</TooltipTrigger>
-                      <TooltipContent side="right">
-                        <p>{slot?.Wednesday?.description}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  {renderSlotContent(slot?.Wednesday)}
                 </td>
                 <td className="w-1/5 p-2 border border-grey-500 text-center">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>{slot?.Thursday?.name}</TooltipTrigger>
-                      <TooltipContent side="right">
-                        <p>{slot?.Thursday?.description}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  {renderSlotContent(slot?.Thursday)}
                 </td>
                 <td className="w-1/5 p-2 border border-grey-500 text-center">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>{slot?.Friday?.name}</TooltipTrigger>
-                      <TooltipContent side="right">
-                        <p>{slot?.Friday?.description}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  {renderSlotContent(slot?.Friday)}
                 </td>
               </tr>
             ))}
