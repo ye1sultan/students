@@ -66,7 +66,7 @@ export default function Mobility() {
         (a: SimilarSubject, b: SimilarSubject) => b.similarity - a.similarity
       );
 
-      const updatedCourses = similarSubjects.map((course) => {
+      const updatedCourses = similarSubjects.map((course: any) => {
         const isSelected =
           course.similarity === 100 ||
           fetchedSchedule.some(
