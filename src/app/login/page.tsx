@@ -22,11 +22,6 @@ export default function Login() {
       console.log("Login successful:", data);
 
       localStorage.setItem("accessToken", data?.access);
-      localStorage.setItem(
-        "fullName",
-        data?.user?.first_name + " " + data?.user?.last_name
-      );
-      localStorage.setItem("avatar", data?.user?.profile?.avatar);
       localStorage.setItem("university", data?.user?.profile?.university_name);
 
       router.push("/app/home");

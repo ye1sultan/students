@@ -1,110 +1,61 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useRouter } from "next/navigation";
-
-import { getUser } from "@/app/api/api";
+import { changeAvatar, getUser } from "@/app/api/api";
+import { MAIN_API } from "@/app/constants/const";
+import useAuth from "@/app/hooks/useAuth";
+import useFetchData from "@/app/hooks/useFetchData";
+import { User } from "@/app/types/IUser";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Toaster } from "@/components/ui/toaster";
 import { toast } from "@/components/ui/use-toast";
-import { useEffect, useState } from "react";
+import { Edit2Icon } from "lucide-react";
+import { useRef, useState } from "react";
 import { PageTitle } from "../../components/page-title";
-
-interface User {
-  id: number;
-  first_name: string;
-  last_name: string;
-  username: string;
-  profile: {
-    gpa: number;
-    avatar: string;
-    balance: string;
-    university_name: string;
-  };
-}
+import { ChangePassword } from "./components/change-password";
+import { ExitButton } from "./components/exit-button";
 
 export default function Settings() {
-  const router = useRouter();
+  useAuth();
 
-  if (!localStorage.getItem("accessToken")) {
-    router.push("/login");
-  }
+  const { data: user, loading, refetch } = useFetchData<User>(getUser);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [user, setUser] = useState<User>();
-
-  useEffect(() => {
-    const fetchUser = async () => {
+  const handleAvatarChange = async () => {
+    if (avatarFile) {
       try {
-        const userData = await getUser();
-        setUser(userData);
+        await changeAvatar(avatarFile);
+        toast({
+          title: "Сәтті!",
+          description: "Аватар сәтті өзгертілді",
+          variant: "default",
+        });
+        refetch();
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("Error changing avatar:", error);
         toast({
           title: "Қателік!",
-          description: "Пайдаланушы деректерін алу мүмкін болмады",
+          description: "Аватарды өзгерту мүмкін болмады",
           variant: "destructive",
         });
       }
-    };
+    }
+  };
 
-    fetchUser();
-  }, []);
-
-  const handleExit = () => {
-    localStorage.removeItem("accessToken");
-    router.push("/login");
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    setAvatarFile(file);
+    if (file) {
+      setAvatarPreview(URL.createObjectURL(file));
+    }
   };
 
   return (
     <main className="flex min-h-screen flex-col items-start justify-start gap-12 px-12 py-6 text-neutral-950">
       <PageTitle title="Баптаулар" />
-      {user ? (
-        <div className="flex flex-col items-center justify-between gap-12 p-6 border rounded bg-neutral-50 shadow w-[50%]">
-          <div className="flex flex-col items-center gap-4">
-            <img
-              src={user.profile.avatar}
-              alt={`${user.first_name}'s avatar`}
-              className="w-24 h-24 rounded-full"
-            />
-            <h2 className="text-2xl font-bold">
-              {user.first_name + " " + user.last_name}
-            </h2>
-          </div>
-          <div className="flex flex-col justify-center items-start text-lg gap-2">
-            <div className="flex items-baseline">
-              <span className="text-gray-700 font-semibold mr-2">Логин:</span>
-              <span className="text-gray-900">{user.username}</span>
-            </div>
-            <div className="flex items-baseline">
-              <span className="text-gray-700 font-semibold mr-2">
-                Оқу орны:
-              </span>
-              <span className="text-gray-900">
-                {user.profile.university_name}
-              </span>
-            </div>
-            <div className="flex items-baseline">
-              <span className="text-gray-700 font-semibold mr-2">GPA:</span>
-              <span className="text-gray-900">{user.profile.gpa}</span>
-            </div>
-            <div className="flex items-baseline">
-              <span className="text-gray-700 font-semibold mr-2">Баланс:</span>
-              <span className="text-gray-900">{user.profile.balance}</span>
-            </div>
-          </div>
-          <div className="flex flex-col justify-center items-center w-full gap-4">
-            {/* <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[#41787e] transition w-[50%]">
-              Құпия сөзді өзгерту
-            </button> */}
-            <button
-              onClick={handleExit}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-700 transition w-[50%]"
-            >
-              Шығу
-            </button>
-          </div>
-        </div>
-      ) : (
+      {loading ? (
         <div className="flex flex-col items-center justify-between gap-12 p-6 border rounded bg-neutral-50 shadow w-[50%]">
           <div className="flex flex-col items-center gap-4">
             <Skeleton className="w-24 h-24 rounded-full" />
@@ -125,6 +76,75 @@ export default function Settings() {
             <Skeleton className="w-[50%] h-10 rounded-lg" />
             <Skeleton className="w-[50%] h-10 rounded-lg" />
           </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-between gap-12 p-6 border rounded bg-neutral-50 shadow max-w-xl w-full">
+          <div className="w-full flex items-center justify-center">
+            <div className="relative">
+              <img
+                src={avatarPreview || `${MAIN_API}${user?.profile?.avatar}`}
+                alt={`${user?.first_name}'s avatar`}
+                className="w-32 h-32 rounded-full"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute top-0 right-0 rounded-full bg-primary h-10 w-10 text-white flex justify-center items-center"
+              >
+                <Edit2Icon className="h-4 w-4" />
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+            </div>
+          </div>
+          {avatarFile && (
+            <button
+              onClick={handleAvatarChange}
+              className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-[#41787e] transition"
+            >
+              Аватарды өзгерту
+            </button>
+          )}
+          <div className="flex flex-col justify-center items-start text-lg gap-2 w-full">
+            <h2 className="text-xl font-semibold mb-4">Жалпы информация</h2>
+            <div className="w-full flex justify-between items-center gap-x-2">
+              <div className="w-full flex flex-col justify-center items-start">
+                <label htmlFor="fullName">Аты жөні:</label>
+                <input
+                  id="fullName"
+                  type="text"
+                  value={`${user?.first_name} ${user?.last_name}`}
+                  className="w-full bg-transparent border-[1px] border-neutral-300 text-neutral-500 pl-2 cursor-not-allowed h-[40px] rounded-lg"
+                  disabled
+                />
+              </div>
+              <div className="w-full flex flex-col justify-center items-start">
+                <label htmlFor="login">Логин:</label>
+                <input
+                  id="login"
+                  type="text"
+                  value={user?.username}
+                  className="w-full bg-transparent border-[1px] border-neutral-300 text-neutral-500 pl-2 cursor-not-allowed h-[40px] rounded-lg"
+                  disabled
+                />
+              </div>
+            </div>
+            <div className="w-full flex flex-col justify-center items-start">
+              <label htmlFor="university">Университет:</label>
+              <input
+                id="university"
+                type="text"
+                value={user?.profile?.university_name}
+                className="w-full bg-transparent border-[1px] border-neutral-300 text-neutral-500 pl-2 cursor-not-allowed h-[40px] rounded-lg"
+                disabled
+              />
+            </div>
+          </div>
+          <ChangePassword />
         </div>
       )}
       <Toaster />

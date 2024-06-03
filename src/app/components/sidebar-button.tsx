@@ -1,4 +1,3 @@
-// components/SidebarButton.tsx
 import { ReactElement } from "react";
 
 interface SidebarButtonProps {
@@ -16,7 +15,7 @@ export const SidebarButton = ({
 }: SidebarButtonProps) => {
   return (
     <div
-      className={`flex items-center space-x-3 p-2 hover:bg-neutral-200 cursor-pointer ${className}`}
+      className={`flex items-center space-x-3 p-2 hover:bg-neutral-200 rounded cursor-pointer ${className}`}
       onClick={onClick}
     >
       {icon}

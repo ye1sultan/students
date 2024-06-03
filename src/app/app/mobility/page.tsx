@@ -3,62 +3,39 @@
 import {
   deleteSubjectFromSchedule,
   getSchedule,
-  getSubjects,
+  getSimilarSubjects,
   scheduleClass,
 } from "@/app/api/api";
-import { Course } from "@/app/types/ICourse";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { numberOfCoursesAtom } from "@/app/atoms/numberOfCourses";
+import useAuth from "@/app/hooks/useAuth";
+import { FetchedSlot } from "@/app/types/ISchedule";
+import { SimilarSubject } from "@/app/types/ISimilarSubject";
+import { getNumberOfCredits } from "@/app/utils/getNumberOfCredits";
+import { Toaster } from "@/components/ui/toaster";
+import { toast } from "@/components/ui/use-toast";
+import { useAtom } from "jotai";
+import { useState } from "react";
 import { PageTitle } from "../../components/page-title";
 
 export default function Mobility() {
-  const router = useRouter();
-
-  if (!localStorage.getItem("accessToken")) {
-    router.push("/login");
-  }
-
-  const [subjects, setSubjects] = useState<Course[]>([]);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
-  const [schedule, setSchedule] = useState([]);
-  const [otherUniSubject, setOtherUniSubject] = useState<Course | null>(null);
+  useAuth();
 
   const [filters, setFilters] = useState({
-    university_name: "",
-    term: "Көктем",
-    year: "2024",
-    faculty_name: "",
+    university_name: "Turan",
+    term: "Күз",
+    year: 2024,
+    faculty_name: "Engineering",
   });
 
   const [showUniversityHints, setShowUniversityHints] = useState(false);
   const [showFacultyHints, setShowFacultyHints] = useState(false);
 
-  useEffect(() => {
-    const fetchSubjectsAndSchedule = async () => {
-      try {
-        const subjects = await getSubjects();
-        setSubjects(subjects);
+  const [filteredCourses, setFilteredCourses] = useState<SimilarSubject[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<SimilarSubject | null>(
+    null
+  );
 
-        const schedule = await getSchedule();
-        setSchedule(schedule);
-
-        const otherUniSubject = schedule.find(
-          (s: any) =>
-            s.subject_semester__subject__university__name !==
-            localStorage.getItem("university")
-        );
-
-        setOtherUniSubject(otherUniSubject);
-
-        console.log(schedule);
-      } catch (error) {
-        console.error("Failed to fetch subjects:", error);
-      }
-    };
-
-    fetchSubjectsAndSchedule();
-  }, []);
+  const [numberOfCourses, setNumberOfCourses] = useAtom(numberOfCoursesAtom);
 
   const handleFilterChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -67,79 +44,125 @@ export default function Mobility() {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
+    if (!filters.university_name || !filters.faculty_name) {
+      alert("Please fill in all filter fields before searching.");
+      return;
+    }
+
     console.log(filters);
-    setFilteredCourses(
-      subjects.filter(
-        (course) =>
-          course.subject__university__name
-            .toLowerCase()
-            .includes(filters.university_name.toLowerCase()) &&
-          course.semester__term.includes(filters.term) &&
-          course.semester__year.toString().includes(filters.year) &&
-          course.subject__faculty__name
-            .toLowerCase()
-            .includes(filters.faculty_name.toLowerCase())
-      )
-    );
+    try {
+      const similarSubjects = await getSimilarSubjects(
+        filters.university_name,
+        filters.faculty_name,
+        filters.year,
+        filters.term
+      );
+
+      const fetchedSchedule: FetchedSlot[] = await getSchedule();
+      setNumberOfCourses(fetchedSchedule.length);
+
+      similarSubjects.sort(
+        (a: SimilarSubject, b: SimilarSubject) => b.similarity - a.similarity
+      );
+
+      const updatedCourses = similarSubjects.map((course) => {
+        const isSelected =
+          course.similarity === 100 ||
+          fetchedSchedule.some(
+            (slot) => slot.subject_semester_id === course.subject_semester_id
+          );
+        return { ...course, isSelected };
+      });
+
+      setFilteredCourses(updatedCourses);
+      console.log(updatedCourses);
+    } catch (error) {
+      setFilteredCourses([]);
+      console.error("Failed to fetch similar subjects:", error);
+    }
   };
 
-  const handleSelectCourse = (course: Course) => {
-    setSelectedCourse(selectedCourse?.id === course.id ? null : course);
+  const handleSelectCourse = (course: SimilarSubject) => {
+    if (course.isSelected) {
+      handleRemoveCourse(course);
+    } else {
+      setSelectedCourse(course);
+      handleAddCourse(course);
+    }
   };
 
-  const handleAddCourse = async () => {
-    if (selectedCourse) {
+  const handleAddCourse = async (course: SimilarSubject) => {
+    const credits = getNumberOfCredits();
+    if (course.credits + (await credits) > 30) {
+      toast({
+        title: "Кредит саны",
+        description: "Кредит саны шектеулі",
+        variant: "destructive",
+      });
+    }
+
+    if (course) {
       try {
-        const semester_id = 4;
-        // if (otherUniSubject) {
-        //   await deleteSubjectFromSchedule(otherUniSubject.id);
-        //   setOtherUniSubject(null);
-        // }
-
-        const response = await scheduleClass(
-          semester_id,
-          selectedCourse.id,
-          selectedCourse.day_of_week,
-          selectedCourse.start_time,
-          selectedCourse.end_time
+        await scheduleClass(
+          course.semester_id,
+          course.subject_semester_id,
+          course.day_of_week,
+          course.start_time,
+          course.end_time
         );
 
         const updatedSchedule = await getSchedule();
-        setSchedule(updatedSchedule);
+        setNumberOfCourses(updatedSchedule.length);
 
-        const newOtherUniSubject = updatedSchedule.find(
-          (s) =>
-            s.subject_semester__subject__university__name !==
-            localStorage.getItem("university")
-        );
+        toast({
+          title: "Сәтті",
+          description: "Пән күнтізбеге енгізілді!",
+          variant: "default",
+        });
 
-        setOtherUniSubject(newOtherUniSubject);
-
-        console.log("Scheduled course:", response);
+        handleSearch();
       } catch (error) {
-        console.error("Failed to schedule course:", error);
+        console.error("Failed to add course:", error);
+        toast({
+          title: "Қате",
+          description: "Пән күнтізбеге енгізілмеді",
+          variant: "destructive",
+        });
       }
     }
   };
 
-  const getHints = (input: string, field: keyof Course) => {
-    const hints = Array.from(
-      new Set(
-        subjects
-          .map((course: any) => course[field])
-          .filter((value: any) =>
-            value.toLowerCase().includes(input.toLowerCase())
-          )
-      )
-    );
-    return hints.slice(0, 5);
+  const handleRemoveCourse = async (course: SimilarSubject) => {
+    if (course) {
+      try {
+        await deleteSubjectFromSchedule(course.subject_semester_id);
+
+        const updatedSchedule = await getSchedule();
+        setNumberOfCourses(updatedSchedule.length);
+
+        toast({
+          title: "Сәтті",
+          description: "Пән күнтізбеден жойылды!",
+          variant: "default",
+        });
+
+        handleSearch();
+      } catch (error) {
+        console.error("Failed to remove course:", error);
+        toast({
+          title: "Қате",
+          description: "Пән күнтізбеден жойылмады",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   return (
     <main className="flex min-h-screen flex-col items-start justify-start gap-12 px-12 py-6 text-neutral-950">
       <PageTitle title="Академиялық Ұтқырлық" />
-      <div className="bg-white p-6 rounded shadow w-full max-w-5xl">
+      <div className="bg-neutral-50 p-6 rounded shadow w-full max-w-6xl">
         <div className="flex flex-col w-full justify-center items-center gap-4">
           <div className="flex justify-between items-center gap-4 w-full">
             <div className="relative w-full">
@@ -156,24 +179,18 @@ export default function Mobility() {
               />
               {showUniversityHints && filters.university_name && (
                 <div className="absolute bg-white border border-gray-300 rounded-md mt-1 w-full z-10">
-                  {getHints(
-                    filters.university_name,
-                    "subject__university__name"
-                  ).map((hint, index) => (
-                    <div
-                      key={index}
-                      onClick={() => {
-                        setFilters((prev) => ({
-                          ...prev,
-                          university_name: hint as string,
-                        }));
-                        setShowUniversityHints(false);
-                      }}
-                      className="p-2 cursor-pointer hover:bg-gray-200"
-                    >
-                      {hint}
-                    </div>
-                  ))}
+                  <div
+                    onClick={() => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        university_name: "Turan",
+                      }));
+                      setShowUniversityHints(false);
+                    }}
+                    className="p-2 cursor-pointer hover:bg-gray-200"
+                  >
+                    Turan
+                  </div>
                 </div>
               )}
             </div>
@@ -192,23 +209,18 @@ export default function Mobility() {
               />
               {showFacultyHints && filters.faculty_name && (
                 <div className="absolute bg-white border border-gray-300 rounded-md mt-1 w-full z-10">
-                  {getHints(filters.faculty_name, "subject__faculty__name").map(
-                    (hint, index) => (
-                      <div
-                        key={index}
-                        onClick={() => {
-                          setFilters((prev) => ({
-                            ...prev,
-                            faculty_name: hint as string,
-                          }));
-                          setShowFacultyHints(false);
-                        }}
-                        className="p-2 cursor-pointer hover:bg-gray-200"
-                      >
-                        {hint}
-                      </div>
-                    )
-                  )}
+                  <div
+                    onClick={() => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        faculty_name: "Engineering",
+                      }));
+                      setShowFacultyHints(false);
+                    }}
+                    className="p-2 cursor-pointer hover:bg-gray-200"
+                  >
+                    Engineering
+                  </div>
                 </div>
               )}
             </div>
@@ -247,72 +259,62 @@ export default function Mobility() {
         </div>
 
         <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-4">Ұқсас курстар</h2>
+          <h2 className="text-2xl font-bold mb-4">{filters.university_name}</h2>
           <table className="min-w-full bg-white border border-gray-300 rounded-lg">
             <thead className="bg-primary text-white">
               <tr>
-                <th className="p-2 text-left">Код</th>
+                <th className="p-2 text-left">№</th>
                 <th className="p-2 text-left">Аты</th>
-                <th className="p-2 text-left">Семестр</th>
                 <th className="p-2 text-left">Кредит саны</th>
+                <th className="p-2 text-left">Факультет</th>
+                <th className="p-2 text-center">Сипаттама</th>
+                <th className="p-2 text-center">Ұқсастық</th>
                 <th className="p-2 text-left"></th>
               </tr>
             </thead>
             <tbody>
               {filteredCourses.length < 1 ? (
                 <tr>
-                  <td colSpan={5} className="p-2">
+                  <td colSpan={7} className="p-2">
                     Курс табылған жоқ
                   </td>
                 </tr>
               ) : (
-                filteredCourses.map((course) => (
-                  <tr
-                    key={course.id}
-                    className={`relative border-b border-gray-200 ${
-                      selectedCourse && selectedCourse.id === course.id
-                        ? "bg-blue-100"
-                        : ""
-                    }`}
-                  >
-                    <td className="p-2">{course.subject__code}</td>
-                    <td className="p-2">{course.subject__title}</td>
-                    <td className="p-2">
-                      {course.semester__term} {course.semester__year}
-                    </td>
-                    <td className="p-2">{course.subject__credits}</td>
-                    <td className="p-2">
-                      <button
-                        onClick={() => handleSelectCourse(course)}
-                        className={`text-2xl font-light text-neutral-50 rounded h-8 w-8 ${
-                          selectedCourse && selectedCourse.id === course.id
-                            ? "bg-red-500"
-                            : "bg-primary"
-                        } flex justify-center items-center`}
-                      >
-                        {selectedCourse && selectedCourse.id === course.id
-                          ? "-"
-                          : "+"}
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                filteredCourses
+                  .slice(0, numberOfCourses)
+                  .map((course, index) => (
+                    <tr
+                      key={index}
+                      className={`relative border-b border-gray-200 ${
+                        course.isSelected ? "bg-blue-100" : ""
+                      }`}
+                    >
+                      <td className="p-2">{index + 1}</td>
+                      <td className="p-2">{course.title}</td>
+                      <td className="p-2 text-center">{course.credits}</td>
+                      <td className="p-2">{course.faculty}</td>
+                      <td className="p-2 max-w-[300px] line-clamp-4">
+                        {course.description}
+                      </td>
+                      <td className="p-2 text-center">{course.similarity}%</td>
+                      <td className="p-2">
+                        <button
+                          onClick={() => handleSelectCourse(course)}
+                          className={`text-2xl font-light text-neutral-50 rounded h-8 w-8 ${
+                            course.isSelected ? "bg-red-500" : "bg-primary"
+                          } flex justify-center items-center`}
+                        >
+                          {course.isSelected ? "-" : "+"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
               )}
             </tbody>
           </table>
         </div>
-
-        {selectedCourse && (
-          <div className="mt-6">
-            <button
-              onClick={handleAddCourse}
-              className="px-4 py-2 bg-primary text-white rounded-lg"
-            >
-              Add Course
-            </button>
-          </div>
-        )}
       </div>
+      <Toaster />
     </main>
   );
 }

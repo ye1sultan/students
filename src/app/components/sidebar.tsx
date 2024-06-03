@@ -26,7 +26,6 @@ export const Sidebar = () => {
     { path: "/app/plan", icon: <Plan />, text: "Оқу Жоспары" },
     { path: "/app/schedule", icon: <Schedule />, text: "Күнтізбе" },
     { path: "/app/mobility", icon: <Mobility />, text: "Академиялық Ұтқырлық" },
-    { path: "/app/notifications", icon: <Message />, text: "Хабарламалар" },
     { path: "/app/settings", icon: <Settings />, text: "Баптаулар" },
   ];
 

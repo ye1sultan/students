@@ -3,8 +3,10 @@ export interface FetchedSlot {
   day_of_week: string;
   start_time: string;
   end_time: string;
+  subject_semester_id: number;
   subject_semester__subject__title: string;
   subject_semester__subject__description: string;
+  subject_semester__subject__credits: number;
 }
 
 export interface ScheduleSlot {

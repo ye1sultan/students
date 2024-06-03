@@ -53,7 +53,6 @@ export default function Schedule() {
           }
         });
 
-        // console.log(fetchedSchedule);
         setSchedule(processedSchedule);
       } catch (error) {
         console.error("Failed to fetch schedule:", error);
