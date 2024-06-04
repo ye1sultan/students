@@ -10,7 +10,7 @@ export const CardButton = ({
   return (
     <button
       onClick={onClick}
-      className="min-h-[230px] w-full bg-primary rounded-[4px] flex flex-col justify-evenly items-center shadow text-neutral-50 py-8"
+      className="min-h-[200px] w-full bg-primary bg-gradient-to-tr from-primary to-gradient rounded-[15px] flex flex-col justify-evenly items-center shadow text-neutral-50 py-8"
     >
       {children}
     </button>

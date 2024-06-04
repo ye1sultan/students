@@ -4,12 +4,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Dashboard,
-  Message,
   Mobility,
   Plan,
   Schedule,
   Settings,
-} from "../assets/icons/Icons";
+} from "../../assets/icons/Icons";
 import { SidebarButton } from "./sidebar-button";
 
 export const Sidebar = () => {

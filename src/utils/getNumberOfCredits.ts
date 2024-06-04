@@ -1,5 +1,5 @@
-import { getSchedule } from "@/app/api/api";
-import { FetchedSlot } from "@/app/types/ISchedule";
+import { getSchedule } from "@/api/api";
+import { FetchedSlot } from "@/types/ISchedule";
 
 export const getNumberOfCredits = async (): Promise<number> => {
   try {

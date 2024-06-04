@@ -1,16 +1,14 @@
 "use client";
 
-import { getSchedule } from "@/app/api/api";
-import { FetchedSlot, ScheduleSlot } from "@/app/types/ISchedule";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useRouter } from "next/navigation";
+import { getSchedule } from "@/api/api";
+import { universityAtom } from "@/atoms/university";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import useAuth from "@/hooks/useAuth";
+import { FetchedSlot, ScheduleSlot } from "@/types/ISchedule";
+import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { PageTitle } from "../../components/page-title";
+import { StudentUniSchedule } from "./student-uni-schedule";
 
 const timeSlots = [
   "09:00:00",
@@ -25,18 +23,28 @@ const timeSlots = [
 ];
 
 export default function Schedule() {
-  const router = useRouter();
+  useAuth();
+
   const [schedule, setSchedule] = useState<ScheduleSlot[]>([]);
+  const [mobilitySchedule, setMobilitySchedule] = useState<ScheduleSlot[]>([]);
+  const [activeTab, setActiveTab] = useState("subject");
+
+  const university = useAtomValue(universityAtom);
+
+  const filterMobilitySubjects = (
+    schedule: FetchedSlot[],
+    university: string | null
+  ) => {
+    return schedule.filter((slot) => {
+      return slot.subject_semester__subject__university__name !== university;
+    });
+  };
 
   useEffect(() => {
-    if (!localStorage.getItem("accessToken")) {
-      router.push("/login");
-      return;
-    }
-
     const fetchSchedule = async () => {
       try {
         const fetchedSchedule: FetchedSlot[] = await getSchedule();
+        console.log(fetchedSchedule);
         const processedSchedule: ScheduleSlot[] = timeSlots.map((time) => ({
           time,
         }));
@@ -46,97 +54,69 @@ export default function Schedule() {
             (t) => t.time === slot.start_time
           );
           if (timeIndex !== -1) {
-            const dayOfWeek = slot.day_of_week; // Keeping dayOfWeek as string
+            const dayOfWeek = slot.day_of_week;
             processedSchedule[timeIndex][dayOfWeek] = {
               name: slot.subject_semester__subject__title,
               description: slot.subject_semester__subject__description,
+              university: slot.subject_semester__subject__university__name,
             };
           }
         });
 
         setSchedule(processedSchedule);
+
+        const mobilitySubjects = filterMobilitySubjects(
+          fetchedSchedule,
+          university
+        );
+        const processedMobilitySchedule: ScheduleSlot[] = timeSlots.map(
+          (time) => ({
+            time,
+          })
+        );
+
+        mobilitySubjects.forEach((slot) => {
+          const timeIndex = processedMobilitySchedule.findIndex(
+            (t) => t.time === slot.start_time
+          );
+          if (timeIndex !== -1) {
+            const dayOfWeek = slot.day_of_week;
+            processedMobilitySchedule[timeIndex][dayOfWeek] = {
+              name: slot.subject_semester__subject__title,
+              description: slot.subject_semester__subject__description,
+              university: slot.subject_semester__subject__university__name,
+            };
+          }
+        });
+
+        setMobilitySchedule(processedMobilitySchedule);
       } catch (error) {
         console.error("Failed to fetch schedule:", error);
       }
     };
 
     fetchSchedule();
-  }, [router]);
-
-  const renderSlotContent = (
-    slot: string | { name: string; description: string }
-  ) => {
-    if (typeof slot === "object") {
-      return (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger>{slot.name}</TooltipTrigger>
-            <TooltipContent side="right">
-              <p>{slot.description}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      );
-    }
-    return null;
-  };
+  }, [university]);
 
   return (
     <main className="flex w-full min-h-screen flex-col items-start justify-start gap-12 px-12 py-6 text-neutral-950">
       <PageTitle title="Күнтізбе" />
-      <div className="overflow-hidden w-full rounded-lg border border-gray-200">
-        <table className="min-w-full table-fixed border-collapse">
-          <thead>
-            <tr className="bg-primary text-neutral-50 h-[60px]">
-              <th className="w-20 p-2 font-bold border border-grey-500 text-left">
-                Time
-              </th>
-              <th className="w-1/5 p-2 font-bold border border-grey-500 text-left">
-                Дүйсембі
-              </th>
-              <th className="w-1/5 p-2 font-bold border border-grey-500 text-left">
-                Сейсенбі
-              </th>
-              <th className="w-1/5 p-2 font-bold border border-grey-500 text-left">
-                Сәрсенбі
-              </th>
-              <th className="w-1/5 p-2 font-bold border border-grey-500 text-left">
-                Бейсенбі
-              </th>
-              <th className="w-1/5 p-2 font-bold border border-grey-500 text-left">
-                Жұма
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {schedule.map((slot, index) => (
-              <tr
-                key={index}
-                className="bg-gray-100 border border-grey-500 h-[60px]"
-              >
-                <td className="p-2 border border-grey-500 text-left bg-primary text-neutral-50">
-                  {slot.time}
-                </td>
-                <td className="w-1/5 p-2 border border-grey-500 text-center">
-                  {renderSlotContent(slot?.Monday)}
-                </td>
-                <td className="w-1/5 p-2 border border-grey-500 text-center">
-                  {renderSlotContent(slot?.Tuesday)}
-                </td>
-                <td className="w-1/5 p-2 border border-grey-500 text-center">
-                  {renderSlotContent(slot?.Wednesday)}
-                </td>
-                <td className="w-1/5 p-2 border border-grey-500 text-center">
-                  {renderSlotContent(slot?.Thursday)}
-                </td>
-                <td className="w-1/5 p-2 border border-grey-500 text-center">
-                  {renderSlotContent(slot?.Friday)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="max-w-xl w-full mb-4">
+          <TabsTrigger className="w-full text-lg" value="subject">
+            {university}
+          </TabsTrigger>
+          <TabsTrigger className="w-full text-lg" value="semestr">
+            Академиялық Ұтқырлық
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent className="w-full" value="subject">
+          <StudentUniSchedule schedule={schedule} />
+        </TabsContent>
+        <TabsContent className="w-full" value="semestr">
+          <StudentUniSchedule schedule={mobilitySchedule} />
+        </TabsContent>
+      </Tabs>
     </main>
   );
 }

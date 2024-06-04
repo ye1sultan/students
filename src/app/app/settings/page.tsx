@@ -1,19 +1,18 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { changeAvatar, getUser } from "@/app/api/api";
-import { MAIN_API } from "@/app/constants/const";
-import useAuth from "@/app/hooks/useAuth";
-import useFetchData from "@/app/hooks/useFetchData";
-import { User } from "@/app/types/IUser";
+import { changeAvatar, getUser } from "@/api/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Toaster } from "@/components/ui/toaster";
 import { toast } from "@/components/ui/use-toast";
+import { MAIN_API } from "@/constants/const";
+import useAuth from "@/hooks/useAuth";
+import useFetchData from "@/hooks/useFetchData";
+import { User } from "@/types/IUser";
 import { Edit2Icon } from "lucide-react";
 import { useRef, useState } from "react";
 import { PageTitle } from "../../components/page-title";
 import { ChangePassword } from "./components/change-password";
-import { ExitButton } from "./components/exit-button";
 
 export default function Settings() {
   useAuth();
@@ -56,7 +55,7 @@ export default function Settings() {
     <main className="flex min-h-screen flex-col items-start justify-start gap-12 px-12 py-6 text-neutral-950">
       <PageTitle title="Баптаулар" />
       {loading ? (
-        <div className="flex flex-col items-center justify-between gap-12 p-6 border rounded bg-neutral-50 shadow w-[50%]">
+        <div className="flex flex-col items-center justify-between gap-12 p-6 border rounded-[15px] bg-neutral-50 shadow w-full max-w-xl">
           <div className="flex flex-col items-center gap-4">
             <Skeleton className="w-24 h-24 rounded-full" />
             <Skeleton className="w-52 h-8 rounded-lg" />
@@ -78,7 +77,7 @@ export default function Settings() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-between gap-12 p-6 border rounded bg-neutral-50 shadow max-w-xl w-full">
+        <div className="flex flex-col items-center justify-between gap-12 p-6 border rounded-[15px] bg-neutral-50 shadow max-w-xl w-full">
           <div className="w-full flex items-center justify-center">
             <div className="relative">
               <img

@@ -1,17 +1,13 @@
 "use client";
 
+import { login } from "@/api/api";
 import { Toaster } from "@/components/ui/toaster";
 import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { login } from "../api/api";
 
 export default function Login() {
   const router = useRouter();
-
-  if (!localStorage.getItem("accessToken")) {
-    router.push("/login");
-  }
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -38,8 +34,8 @@ export default function Login() {
 
   return (
     <main className="flex min-h-screen items-start pt-[10%] justify-center bg-gray-100 text-neutral-950">
-      <div className="bg-white p-8 rounded-lg shadow w-full max-w-md">
-        <h1 className="text-3xl font-bold mb-6 text-center">Login</h1>
+      <div className="bg-white p-8 rounded shadow w-full max-w-md">
+        <h1 className="text-3xl font-bold mb-6 text-center">Қош Келдіңіз!</h1>
         <div className="mb-4">
           <label
             className="block text-sm font-medium text-gray-700"
@@ -75,7 +71,7 @@ export default function Login() {
           className="w-full py-2 px-4 bg-primary text-white rounded-md shadow-sm hover:bg-[#41787e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
           onClick={handleLogin}
         >
-          Login
+          Кіру
         </button>
       </div>
       <Toaster />

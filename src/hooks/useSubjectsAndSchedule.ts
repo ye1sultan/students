@@ -1,8 +1,8 @@
-import { getSubjects, getSchedule } from "@/app/api/api";
-import { Course } from "@/app/types/ICourse";
-import { FetchedSlot } from "@/app/types/ISchedule";
-import { useEffect, useState } from "react";
+import { getSchedule, getSubjects } from "@/api/api";
 import { toast } from "@/components/ui/use-toast";
+import { Course } from "@/types/ICourse";
+import { FetchedSlot } from "@/types/ISchedule";
+import { useEffect, useState } from "react";
 
 const useSubjectsAndSchedule = () => {
   const [subjects, setSubjects] = useState<Course[]>([]);

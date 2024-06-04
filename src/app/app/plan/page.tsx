@@ -1,17 +1,18 @@
 "use client";
 
-import { deleteSubjectFromSchedule, scheduleClass } from "@/app/api/api";
-import { universityAtom } from "@/app/atoms/university";
-import useAuth from "@/app/hooks/useAuth";
-import useSubjectsAndSchedule from "@/app/hooks/useSubjectsAndSchedule";
-import { Course } from "@/app/types/ICourse";
-import { exportToExcel } from "@/app/utils/exportToExcel";
+import { deleteSubjectFromSchedule, scheduleClass } from "@/api/api";
+import { universityAtom } from "@/atoms/university";
 import { Toaster } from "@/components/ui/toaster";
 import { toast } from "@/components/ui/use-toast";
+import useAuth from "@/hooks/useAuth";
+import useSubjectsAndSchedule from "@/hooks/useSubjectsAndSchedule";
+import { Course } from "@/types/ICourse";
+import { exportToExcel } from "@/utils/exportToExcel";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { PageTitle } from "../../components/page-title";
 import { Subject } from "./components/subject";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const maxCredits = 30;
 
@@ -19,8 +20,6 @@ export default function Plan() {
   useAuth();
 
   const { subjects, schedule, loading } = useSubjectsAndSchedule();
-  console.log(subjects);
-
   const university = useAtomValue(universityAtom);
 
   const [selectedSubjects, setSelectedSubjects] = useState<Course[]>([]);
@@ -42,8 +41,6 @@ export default function Plan() {
   }, [subjects, schedule]);
 
   const handleSubjectSelect = async (subject: Course, isSelected: boolean) => {
-    console.log(subject, isSelected);
-
     if (isSelected) {
       if (totalCredits + +subject.subject__credits <= maxCredits) {
         try {
@@ -58,14 +55,14 @@ export default function Plan() {
           setSelectedSubjects((prev) => [...prev, subject]);
           setTotalCredits((prev) => prev + +subject.subject__credits);
           toast({
-            title: "Сәтті",
+            title: "Сәтті!",
             description: "Пән күнтізбеге енгізілді!",
             variant: "default",
           });
         } catch (error) {
           console.error("Error scheduling class:", error);
           toast({
-            title: "Қате",
+            title: "Қателік!",
             description: "Пән күнтізбеге енгізілмеді",
             variant: "destructive",
           });
@@ -81,6 +78,7 @@ export default function Plan() {
       const scheduleItem = schedule.find(
         (slot) => slot.subject_semester_id === subject.id
       );
+
       if (scheduleItem) {
         try {
           await deleteSubjectFromSchedule(scheduleItem.subject_semester_id);
@@ -89,14 +87,14 @@ export default function Plan() {
           );
           setTotalCredits((prev) => prev - +subject.subject__credits);
           toast({
-            title: "Сәтті",
+            title: "Сәтті!",
             description: "Пән жойылды!",
             variant: "default",
           });
         } catch (error) {
           console.error("Error removing class:", error);
           toast({
-            title: "Қате",
+            title: "Қателік!",
             description: "Пән жойылмады!",
             variant: "destructive",
           });
@@ -105,12 +103,13 @@ export default function Plan() {
     }
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
   if (!subjects) {
-    return <div>Error loading subjects</div>;
+    toast({
+      title: "Қателік!",
+      description: "Оқу Жоспары жазылмады",
+      variant: "destructive",
+    });
+    return ":(";
   }
 
   const universitySubjects = subjects.filter(
@@ -124,14 +123,16 @@ export default function Plan() {
   return (
     <main className="flex min-h-screen flex-col items-start justify-start gap-12 px-12 py-6 text-neutral-950">
       <PageTitle title="Оқу Жоспары" />
-      <div className="w-full max-w-2xl">
-        {universitySubjects.length > 0 ? (
+      <div className="w-full max-w-5xl">
+        {loading ? (
+          <Skeleton className="w-full h-[20px] p-4 border rounded-[15px] flex flex-col justify-center items-start" />
+        ) : universitySubjects.length > 0 ? (
           <div className="mb-8">
-            <div className="flex justify-between items-center w-full mb-2">
+            <div className="flex justify-between items-center w-full mb-2 px-4">
               <h2 className="text-2xl font-bold mb-4">{university}</h2>
               <button
                 onClick={handleExport}
-                className="bg-primary text-neutral-50 p-2 rounded"
+                className="bg-primary text-neutral-50 p-2 rounded-[8px]"
               >
                 Экспорт
               </button>

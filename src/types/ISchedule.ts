@@ -12,5 +12,7 @@ export interface FetchedSlot {
 
 export interface ScheduleSlot {
   time: string;
-  [key: string]: { name: string; description: string } | string;
+  [key: string]:
+    | { name: string; description: string; university: string }
+    | string;
 }

@@ -1,4 +1,4 @@
-import { changePassword } from "@/app/api/api";
+import { changePassword } from "@/api/api";
 import { toast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { ExitButton } from "./exit-button";

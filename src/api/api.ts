@@ -1,4 +1,4 @@
-import { MAIN_API } from "../constants/const";
+import { MAIN_API } from "@/constants/const";
 
 export const login = async (username: string, password: string) => {
   const response = await fetch(`${MAIN_API}/auth/login/`, {

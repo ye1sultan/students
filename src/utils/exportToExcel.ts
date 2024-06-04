@@ -1,4 +1,4 @@
-import { Course } from "@/app/types/ICourse";
+import { Course } from "@/types/ICourse";
 import * as XLSX from "xlsx";
 import { getUser } from "../api/api";
 
