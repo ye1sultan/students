@@ -1,7 +1,12 @@
 "use client";
 
-import { deleteSubjectFromSchedule, scheduleClass } from "@/api/api";
+import {
+  deleteSubjectFromSchedule,
+  getCapacity,
+  scheduleClass,
+} from "@/api/api";
 import { universityAtom } from "@/atoms/university";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Toaster } from "@/components/ui/toaster";
 import { toast } from "@/components/ui/use-toast";
 import useAuth from "@/hooks/useAuth";
@@ -12,7 +17,6 @@ import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { PageTitle } from "../../components/page-title";
 import { Subject } from "./components/subject";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const maxCredits = 30;
 
@@ -24,6 +28,22 @@ export default function Plan() {
 
   const [selectedSubjects, setSelectedSubjects] = useState<Course[]>([]);
   const [totalCredits, setTotalCredits] = useState(0);
+  const [capacities, setCapacities] = useState<
+    { id: number; capacity: number }[]
+  >([]);
+
+  useEffect(() => {
+    const fetchCapacities = async () => {
+      try {
+        const capacities = await getCapacity();
+        setCapacities(capacities);
+      } catch (error) {
+        console.error("Error fetching capacities:", error);
+      }
+    };
+
+    fetchCapacities();
+  }, []);
 
   useEffect(() => {
     if (subjects.length > 0 && schedule.length > 0) {
@@ -116,6 +136,8 @@ export default function Plan() {
     (subject) => subject.subject__university__name === university
   );
 
+  console.log(universitySubjects);
+
   const handleExport = async () => {
     exportToExcel(selectedSubjects);
   };
@@ -142,12 +164,16 @@ export default function Plan() {
                 const isSelected = selectedSubjects.some(
                   (s) => s.subject__id === subject.subject__id
                 );
+                const subjectCapacity =
+                  capacities.find((cap) => cap.id === subject.subject__id)
+                    ?.capacity || 0;
                 return (
                   <Subject
                     key={index}
                     subject={subject}
                     isSelected={isSelected}
                     onSelect={handleSubjectSelect}
+                    capacity={subjectCapacity}
                   />
                 );
               })}

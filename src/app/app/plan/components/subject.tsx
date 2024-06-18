@@ -6,10 +6,12 @@ export const Subject = ({
   subject,
   isSelected,
   onSelect,
+  capacity,
 }: {
   subject: Course;
   isSelected: boolean;
   onSelect: (subject: Course, isSelected: boolean) => void;
+  capacity: any;
 }) => {
   return (
     <div
@@ -19,7 +21,10 @@ export const Subject = ({
     >
       <div className="w-full flex justify-between items-center">
         <div className="flex justify-start items-center gap-x-4">
-          <h3 className="text-lg font-semibold">{subject.subject__title}</h3>
+          <h3 className="text-lg font-semibold">
+            {subject.subject__title}
+          </h3>
+          <span className="text-neutral-500">{capacity} орын қалды</span>
         </div>
         <p className="text-neutral-700">{subject.subject__credits} кредит</p>
       </div>

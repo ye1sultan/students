@@ -219,3 +219,28 @@ export const getSimilarSubjects = async (
 
   return response.json();
 };
+
+export const getCapacity = async () => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("No access token found");
+  }
+
+  const response = await fetch(`${MAIN_API}/studyplan/api/subjects/`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch capacity");
+  }
+
+  const subjects = await response.json();
+  return subjects.map((subject: any) => ({
+    id: subject.id,
+    capacity: subject.capacity,
+  }));
+};
