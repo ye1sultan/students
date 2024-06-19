@@ -97,7 +97,7 @@ export default function Review() {
           disabled={loading}
           className="w-full bg-primary text-white p-2 rounded-md"
         >
-          {loading ? "Sending..." : "Send Message"}
+          {loading ? "Жіберілуде..." : "Жіберу"}
         </button>
         {error && <p className="mt-4 text-red-500">{error}</p>}
       </div>
