@@ -23,7 +23,7 @@ export const HomePageButtons = () => {
         <Mobility className="w-16 h-16" />
         <p className="text-lg">Академиялық ұтқырлық</p>
       </CardButton>
-      <CardButton onClick={() => handleRoute("/app/notifications")}>
+      <CardButton onClick={() => handleRoute("/app/review")}>
         <Message className="w-16 h-16" />
         <p className="text-lg">Ақпараттық көмек</p>
       </CardButton>
